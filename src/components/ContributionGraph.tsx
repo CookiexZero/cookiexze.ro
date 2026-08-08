@@ -64,7 +64,9 @@ export function ContributionGraph({ months = 6 }: { months?: number }) {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Half a year of weeks is wider than a phone; it scrolls here rather
+          than widening the page. */}
+      <div className="max-w-full overflow-x-auto">
         <div
           className="flex gap-2"
           role="img"

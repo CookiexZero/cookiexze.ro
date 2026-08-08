@@ -29,7 +29,7 @@ export function GitHubFeed() {
       {events.map((event) => (
         <li key={event.id}>
           <a
-            href={`https://github.com/${event.repo.name}`}
+            href={eventUrl(event)}
             target="_blank"
             rel="noreferrer noopener"
             className="flex items-baseline gap-3 rounded-2xl px-3.5 py-2.5 transition hover:bg-white hover:shadow-sm"
@@ -55,16 +55,32 @@ export function GitHubFeed() {
   );
 }
 
-function describe(event: GitHubEvent): string {
+/** Deep-link to the thing that happened, falling back to the repository. */
+export function eventUrl(event: GitHubEvent): string {
+  const repo = `https://github.com/${event.repo.name}`;
+  const { payload } = event;
+  if (event.type === 'PushEvent' && payload.head) {
+    return `${repo}/commit/${payload.head}`;
+  }
+  return payload.pull_request?.html_url ?? payload.issue?.html_url ?? repo;
+}
+
+export function describe(event: GitHubEvent): string {
   const { payload } = event;
   switch (event.type) {
     case 'PushEvent': {
-      const count = payload.commits?.length ?? 0;
       const branch = payload.ref?.replace('refs/heads/', '') ?? 'main';
       const subject = payload.commits?.at(-1)?.message.split('\n')[0];
-      return subject
-        ? `${subject} (${count} ${plural(count, 'коммит', 'коммита', 'коммитов')} в ${branch})`
-        : `Запушил ${count} ${plural(count, 'коммит', 'коммита', 'коммитов')} в ${branch}`;
+      if (subject) return `${subject} · ${branch}`;
+
+      // No commit list in the payload: state the branch and the head sha
+      // rather than inventing a count.
+      const count = payload.size ?? 0;
+      if (count > 0) {
+        return `Запушил ${count} ${plural(count, 'коммит', 'коммита', 'коммитов')} в ${branch}`;
+      }
+      const head = payload.head?.slice(0, 7);
+      return head ? `Запушил в ${branch} · ${head}` : `Запушил в ${branch}`;
     }
     case 'CreateEvent':
       return payload.ref_type === 'repository'

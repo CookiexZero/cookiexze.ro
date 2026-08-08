@@ -207,7 +207,7 @@ function Header({
             </p>
 
             {customStatus && (
-              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600">
+              <p className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-sm wrap-break-word text-zinc-600">
                 {customStatus.emoji && (
                   <StatusEmoji emoji={customStatus.emoji} />
                 )}
@@ -269,7 +269,11 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className={className}>
+    // `min-w-0` is load-bearing: a grid item defaults to `min-width: auto`, so
+    // without it the track grows to the widest content — the contribution graph
+    // — and pushes the whole page past the viewport instead of scrolling inside
+    // its own container.
+    <section className={`min-w-0 ${className}`}>
       <h2 className="mb-3 text-xs font-semibold tracking-[0.12em] text-zinc-400 uppercase">
         {title}
       </h2>

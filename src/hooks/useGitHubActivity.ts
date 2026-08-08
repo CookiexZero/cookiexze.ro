@@ -6,7 +6,11 @@ export type GitHubEvent = {
   created_at: string;
   repo: { name: string };
   payload: {
+    // GitHub has trimmed the public push payload: `commits` and `size` are
+    // often absent now, leaving only the ref and the resulting head sha.
     commits?: { message: string; sha: string }[];
+    size?: number;
+    head?: string;
     ref?: string;
     ref_type?: string;
     action?: string;
