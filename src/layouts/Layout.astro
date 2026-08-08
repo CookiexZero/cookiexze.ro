@@ -1,0 +1,32 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#fafafa" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <!-- The Discord CDN serves the avatar and banner, so warm the connection. -->
+    <link rel="preconnect" href="https://cdn.discordapp.com" />
+    <link rel="preconnect" href="https://dcdn.dstn.to" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

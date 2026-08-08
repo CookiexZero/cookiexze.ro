@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PersonalPage from '../components/PersonalPage';
+import { site } from '../config';
+---
+
+<Layout title={site.fallbackName} description={site.tagline}>
+  <!-- Prerendered as a skeleton, then hydrated: all Discord and GitHub data is
+       fetched in the browser so it stays fresh without a rebuild. -->
+  <PersonalPage client:load />
+</Layout>
