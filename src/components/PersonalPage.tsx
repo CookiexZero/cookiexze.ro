@@ -17,6 +17,7 @@ import { useDiscordProfile } from '../hooks/useDiscordProfile';
 import { useLanyard } from '../hooks/useLanyard';
 import { ContributionGraph } from './ContributionGraph';
 import { GitHubFeed } from './GitHubFeed';
+import { BrandIcon } from './Icon';
 import { Links } from './Links';
 import { NexusShiyuLogo } from './NexusShiyuLogo';
 import { Presence } from './Presence';
@@ -105,8 +106,19 @@ export default function PersonalPage() {
           </Section>
         </div>
 
-        <footer className="mt-16 border-t border-zinc-200/70 pt-6 text-xs text-zinc-400">
-          Аватар, баннер и статус тянутся из Discord в реальном времени.
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-zinc-200/70 pt-6 text-xs text-zinc-400">
+          <span>
+            Аватар, баннер и статус тянутся из Discord в реальном времени.
+          </span>
+          <a
+            href={site.repo}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 text-zinc-500 transition hover:text-zinc-900"
+          >
+            <BrandIcon name="github" className="h-3.5 w-3.5" />
+            Исходный код этой страницы
+          </a>
         </footer>
       </div>
     </main>

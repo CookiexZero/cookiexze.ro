@@ -21,6 +21,8 @@ export const site = {
   location: 'Tokyo, Japan',
   /** Falls back to the Discord "About Me" when that is empty. */
   bio: '',
+  /** Source of this page, linked from the footer. */
+  repo: 'https://github.com/CookiexZero/cookiexze.ro',
 };
 
 /** Static "what I'm up to" list — the part Discord and GitHub can't know. */
