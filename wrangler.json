@@ -1,4 +1,7 @@
 {
   "name": "cookiexze-ro",
-  "compatibility_date": "2024-08-08"
+  "compatibility_date": "2024-08-08",
+  "assets": {
+    "directory": "./dist"
+  }
 }
