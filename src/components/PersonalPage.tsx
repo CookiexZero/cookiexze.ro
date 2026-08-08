@@ -144,98 +144,101 @@ function Header({
   );
 
   return (
-    // Mobile keeps the self-contained profile card; from `lg` the card
-    // dissolves and the banner runs edge to edge across the viewport.
-    <header className="mx-auto max-w-2xl px-4 pt-10 sm:px-6 sm:pt-14 lg:max-w-none lg:px-0 lg:pt-0">
-      <div className="overflow-hidden rounded-3xl border border-zinc-200/80 bg-white shadow-sm lg:rounded-none lg:border-0 lg:border-b lg:border-zinc-200/70 lg:bg-transparent lg:shadow-none">
-        <div
-          className="h-32 w-full bg-zinc-100 bg-cover bg-center sm:h-40 lg:h-72 xl:h-80"
-          style={{
-            // Discord falls back to the profile accent colour when there is no
-            // banner image; mirror that instead of showing an empty grey block.
-            backgroundImage: banner
-              ? `url(${banner})`
-              : accent
-                ? `linear-gradient(135deg, ${accent}, ${accent}99)`
-                : undefined,
-          }}
-          role="img"
-          aria-label={banner ? 'Баннер профиля Discord' : ''}
-        />
+    // The banner runs edge to edge at every width; the text below it lines up
+    // with the page container.
+    <header className="border-b border-zinc-200/70">
+      <div
+        className="h-40 w-full bg-zinc-100 bg-cover bg-center sm:h-56 lg:h-72 xl:h-80"
+        style={{
+          // Discord falls back to the profile accent colour when there is no
+          // banner image; mirror that instead of showing an empty grey block.
+          backgroundImage: banner
+            ? `url(${banner})`
+            : accent
+              ? `linear-gradient(135deg, ${accent}, ${accent}99)`
+              : undefined,
+        }}
+        role="img"
+        aria-label={banner ? 'Баннер профиля Discord' : ''}
+      />
 
-        <div className="px-5 pb-6 sm:px-7 lg:mx-auto lg:max-w-6xl lg:px-8 lg:pb-10">
-          <div className="-mt-12 sm:-mt-14 lg:-mt-20 lg:flex lg:items-end lg:gap-7">
-            <div className="relative shrink-0">
-              {user ? (
-                <img
-                  src={avatarUrl(user, 512)}
-                  alt={`Аватар ${displayName(user)}`}
-                  className="h-24 w-24 rounded-full bg-white object-cover ring-4 ring-white sm:h-28 sm:w-28 lg:h-36 lg:w-36 lg:ring-[6px]"
-                />
-              ) : (
-                <div className="h-24 w-24 animate-pulse rounded-full bg-zinc-200 ring-4 ring-white sm:h-28 sm:w-28 lg:h-36 lg:w-36 lg:ring-[6px]" />
-              )}
-
-              {decoration && (
-                <img
-                  src={decoration}
-                  alt=""
-                  aria-hidden="true"
-                  // The decoration frame is drawn at ~1.2x the avatar box and
-                  // centred on it, matching how Discord composites the two.
-                  className="pointer-events-none absolute top-1/2 left-1/2 h-[120%] w-[120%] max-w-none -translate-x-1/2 -translate-y-1/2"
-                />
-              )}
-
-              <span
-                className={`absolute right-1 bottom-1 h-5 w-5 rounded-full ring-4 ring-white sm:h-6 sm:w-6 lg:right-2 lg:bottom-2 lg:h-7 lg:w-7 lg:ring-[5px] ${statusColor[status]}`}
-                title={statusLabel[status]}
-                aria-label={statusLabel[status]}
-                role="status"
+      <div className="mx-auto w-full max-w-2xl px-4 pb-6 sm:px-6 lg:max-w-6xl lg:px-8 lg:pb-10">
+        <div className="-mt-12 sm:-mt-14 lg:-mt-20 lg:flex lg:items-end lg:gap-7">
+          {/* Sized explicitly: the decoration and the status dot are absolutely
+              positioned against this box, so it must not stretch to the full
+              container width when the row is not a flex row yet. */}
+          <div className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28 lg:h-36 lg:w-36">
+            {user ? (
+              <img
+                src={avatarUrl(user, 512)}
+                alt={`Аватар ${displayName(user)}`}
+                className="h-24 w-24 rounded-full bg-white object-cover ring-4 ring-white sm:h-28 sm:w-28 lg:h-36 lg:w-36 lg:ring-[6px]"
               />
-            </div>
+            ) : (
+              <div className="h-24 w-24 animate-pulse rounded-full bg-zinc-200 ring-4 ring-white sm:h-28 sm:w-28 lg:h-36 lg:w-36 lg:ring-[6px]" />
+            )}
 
-            <div className="mt-4 min-w-0 lg:mt-0 lg:flex-1 lg:pb-2">
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 lg:text-3xl">
-                {user ? displayName(user) : loading ? ' ' : site.fallbackName}
-              </h1>
-              <p className="mt-0.5 font-mono text-sm text-zinc-400">
-                @{user?.username ?? site.fallbackName}
-                {profile?.pronouns ? ` · ${profile.pronouns}` : ''}
-              </p>
+            {decoration && (
+              <img
+                src={decoration}
+                alt=""
+                aria-hidden="true"
+                // The decoration frame is drawn at ~1.2x the avatar box and
+                // centred on it, matching how Discord composites the two.
+                className="pointer-events-none absolute top-1/2 left-1/2 h-[120%] w-[120%] max-w-none -translate-x-1/2 -translate-y-1/2"
+              />
+            )}
 
-              {customStatus && (
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600">
-                  {customStatus.emoji && (
-                    <StatusEmoji emoji={customStatus.emoji} />
-                  )}
-                  {customStatus.state}
-                </p>
-              )}
-            </div>
+            <span
+              className={`absolute right-1 bottom-1 h-5 w-5 rounded-full ring-4 ring-white sm:h-6 sm:w-6 lg:right-2 lg:bottom-2 lg:h-7 lg:w-7 lg:ring-[5px] ${statusColor[status]}`}
+              title={statusLabel[status]}
+              aria-label={statusLabel[status]}
+              role="status"
+            />
           </div>
 
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed whitespace-pre-line text-zinc-600 lg:mt-5">
-            {renderInlineMarkdown(site.bio || profile?.bio || site.tagline)}
-          </p>
+          <div className="mt-4 min-w-0 lg:mt-0 lg:flex-1 lg:pb-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 lg:text-3xl">
+              {user ? displayName(user) : loading ? ' ' : site.fallbackName}
+            </h1>
+            <p className="mt-0.5 font-mono text-sm text-zinc-400">
+              @{user?.username ?? site.fallbackName}
+              {profile?.pronouns ? ` · ${profile.pronouns}` : ''}
+            </p>
 
-          <p className="mt-3 flex items-center gap-1.5 text-sm text-zinc-400">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11Z" />
-              <circle cx="12" cy="10" r="2.5" />
-            </svg>
-            {site.location}
-          </p>
+            {customStatus && (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-600">
+                {customStatus.emoji && (
+                  <StatusEmoji emoji={customStatus.emoji} />
+                )}
+                {customStatus.state}
+              </p>
+            )}
+          </div>
         </div>
+
+        {/* `break-words` so a long unbroken string in the Discord bio (a URL, a
+            row of dashes) can't push the page sideways on a phone. */}
+        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed wrap-break-word whitespace-pre-line text-zinc-600 lg:mt-5">
+          {renderInlineMarkdown(site.bio || profile?.bio || site.tagline)}
+        </p>
+
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-zinc-400">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          {site.location}
+        </p>
       </div>
     </header>
   );
