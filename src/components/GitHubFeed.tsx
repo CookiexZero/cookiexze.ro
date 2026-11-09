@@ -1,51 +1,43 @@
-import { GITHUB_USER } from '../config';
-import { useGitHubActivity, type GitHubEvent } from '../hooks/useGitHubActivity';
+import { GITHUB_USER } from "../config";
+import {
+  useGitHubActivity,
+  type GitHubEvent,
+} from "../hooks/useGitHubActivity";
 
 export function GitHubFeed() {
   const { events, error, loading } = useGitHubActivity(GITHUB_USER);
 
   if (loading) {
     return (
-      <div className="space-y-2">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-12 animate-pulse rounded-2xl bg-zinc-100" />
-        ))}
+      <div className="data-loading" role="status">
+        Загружаю события GitHub…
       </div>
     );
   }
 
   if (error || events.length === 0) {
     return (
-      <p className="rounded-3xl border border-dashed border-zinc-200 px-4 py-6 text-center text-sm text-zinc-400">
-        {error
-          ? 'GitHub не отвечает'
-          : 'Нет свежих публичных событий — GitHub хранит ленту только 90 дней'}
+      <p className="data-message">
+        {error ? "GitHub не отвечает" : "Пока нет свежих публичных событий."}
       </p>
     );
   }
 
   return (
-    <ol className="space-y-1">
+    <ol className="github-feed">
       {events.map((event) => (
         <li key={event.id}>
           <a
             href={eventUrl(event)}
             target="_blank"
             rel="noreferrer noopener"
-            className="flex items-baseline gap-3 rounded-2xl px-3.5 py-2.5 transition hover:bg-white hover:shadow-sm"
+            className="github-event"
           >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-zinc-700">
-                {describe(event)}
-              </span>
-              <span className="block truncate text-xs text-zinc-400">
-                {event.repo.name}
-              </span>
+            <span className="github-event-copy">
+              <span className="github-event-title">{describe(event)}</span>
+              <span className="github-event-repo">{event.repo.name}</span>
             </span>
-            <time
-              dateTime={event.created_at}
-              className="shrink-0 text-xs text-zinc-400 tabular-nums"
-            >
+            <time dateTime={event.created_at}>
               {relativeTime(event.created_at)}
             </time>
           </a>
@@ -59,7 +51,7 @@ export function GitHubFeed() {
 export function eventUrl(event: GitHubEvent): string {
   const repo = `https://github.com/${event.repo.name}`;
   const { payload } = event;
-  if (event.type === 'PushEvent' && payload.head) {
+  if (event.type === "PushEvent" && payload.head) {
     return `${repo}/commit/${payload.head}`;
   }
   return payload.pull_request?.html_url ?? payload.issue?.html_url ?? repo;
@@ -68,36 +60,36 @@ export function eventUrl(event: GitHubEvent): string {
 export function describe(event: GitHubEvent): string {
   const { payload } = event;
   switch (event.type) {
-    case 'PushEvent': {
-      const branch = payload.ref?.replace('refs/heads/', '') ?? 'main';
-      const subject = payload.commits?.at(-1)?.message.split('\n')[0];
+    case "PushEvent": {
+      const branch = payload.ref?.replace("refs/heads/", "") ?? "main";
+      const subject = payload.commits?.at(-1)?.message.split("\n")[0];
       if (subject) return `${subject} · ${branch}`;
 
       // No commit list in the payload: state the branch and the head sha
       // rather than inventing a count.
       const count = payload.size ?? 0;
       if (count > 0) {
-        return `Запушил ${count} ${plural(count, 'коммит', 'коммита', 'коммитов')} в ${branch}`;
+        return `Запушил ${count} ${plural(count, "коммит", "коммита", "коммитов")} в ${branch}`;
       }
       const head = payload.head?.slice(0, 7);
       return head ? `Запушил в ${branch} · ${head}` : `Запушил в ${branch}`;
     }
-    case 'CreateEvent':
-      return payload.ref_type === 'repository'
-        ? 'Создал репозиторий'
-        : `Создал ${payload.ref_type} ${payload.ref ?? ''}`.trim();
-    case 'WatchEvent':
-      return 'Поставил звезду';
-    case 'ForkEvent':
-      return 'Форкнул репозиторий';
-    case 'PullRequestEvent':
-      return `${payload.action === 'closed' ? 'Закрыл' : 'Открыл'} PR #${payload.pull_request?.number}: ${payload.pull_request?.title ?? ''}`;
-    case 'IssuesEvent':
-      return `${payload.action === 'closed' ? 'Закрыл' : 'Открыл'} issue #${payload.issue?.number}: ${payload.issue?.title ?? ''}`;
-    case 'ReleaseEvent':
-      return 'Выпустил релиз';
-    case 'PublicEvent':
-      return 'Открыл исходники';
+    case "CreateEvent":
+      return payload.ref_type === "repository"
+        ? "Создал репозиторий"
+        : `Создал ${payload.ref_type} ${payload.ref ?? ""}`.trim();
+    case "WatchEvent":
+      return "Поставил звезду";
+    case "ForkEvent":
+      return "Форкнул репозиторий";
+    case "PullRequestEvent":
+      return `${payload.action === "closed" ? "Закрыл" : "Открыл"} PR #${payload.pull_request?.number}: ${payload.pull_request?.title ?? ""}`;
+    case "IssuesEvent":
+      return `${payload.action === "closed" ? "Закрыл" : "Открыл"} issue #${payload.issue?.number}: ${payload.issue?.title ?? ""}`;
+    case "ReleaseEvent":
+      return "Выпустил релиз";
+    case "PublicEvent":
+      return "Открыл исходники";
     default:
       return event.type;
   }
@@ -115,14 +107,14 @@ function plural(n: number, one: string, few: string, many: string): string {
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(diff / 60_000);
-  if (minutes < 1) return 'сейчас';
+  if (minutes < 1) return "сейчас";
   if (minutes < 60) return `${minutes} мин`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours} ч`;
   const days = Math.round(hours / 24);
   if (days < 30) return `${days} д`;
-  return new Date(iso).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
+  return new Date(iso).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
   });
 }
