@@ -1,4 +1,5 @@
 import { GITHUB_USER } from "../config";
+import { motion } from "motion/react";
 import {
   useGitHubActivity,
   type GitHubEvent,
@@ -27,11 +28,27 @@ export function GitHubFeed() {
     <ol className="github-feed">
       {events.map((event) => (
         <li key={event.id}>
-          <a
+          <motion.a
             href={eventUrl(event)}
             target="_blank"
             rel="noreferrer noopener"
             className="github-event"
+            initial={false}
+            animate={{
+              paddingLeft: 4,
+              paddingRight: 4,
+              backgroundColor: "rgba(10, 29, 56, 0)",
+            }}
+            whileHover={{
+              paddingLeft: 12,
+              paddingRight: 12,
+              backgroundColor: "#0a1d38",
+            }}
+            whileFocus={{
+              paddingLeft: 12,
+              paddingRight: 12,
+              backgroundColor: "#0a1d38",
+            }}
           >
             <span className="github-event-copy">
               <span className="github-event-title">{describe(event)}</span>
@@ -40,7 +57,7 @@ export function GitHubFeed() {
             <time dateTime={event.created_at}>
               {relativeTime(event.created_at)}
             </time>
-          </a>
+          </motion.a>
         </li>
       ))}
     </ol>

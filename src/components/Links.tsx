@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { links } from "../config";
 import { BrandIcon } from "./Icon";
 
 export function Links() {
+  const reduced = useReducedMotion();
   const [selected, setSelected] = useState(0);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   const active = links[selected]!;
@@ -31,13 +33,17 @@ export function Links() {
           SOCIAL LIST / {String(links.length).padStart(2, "0")}
         </span>
         {links.map(({ icon, label, handle, href }, index) => (
-          <a
+          <motion.a
             key={label}
             ref={(node) => {
               refs.current[index] = node;
             }}
             className={`social-option list-option ${index === selected ? "is-selected" : ""}`}
             href={href}
+            initial={false}
+            animate={{ x: index === selected ? 7 : 0 }}
+            whileHover={{ x: index === selected ? 7 : 4 }}
+            whileTap={{ scale: 0.98 }}
             onPointerMove={() => {
               if (selected !== index) setSelected(index);
             }}
@@ -61,13 +67,16 @@ export function Links() {
             <span className="social-open" aria-hidden="true">
               ↗
             </span>
-          </a>
+          </motion.a>
         ))}
       </nav>
-      <aside
+      <motion.aside
         className="social-detail"
         key={selected}
         aria-label={`Выбран ${active.label}`}
+        initial={{ opacity: 0, x: reduced ? 0 : 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: reduced ? 0 : 0.25 }}
       >
         <span className="detail-overline">CONNECTION / 0{selected + 1}</span>
         <div
@@ -87,7 +96,7 @@ export function Links() {
           {active.icon === "mail" ? "Написать письмо" : "Открыть профиль"}
           <span aria-hidden="true">↗</span>
         </a>
-      </aside>
+      </motion.aside>
     </div>
   );
 }

@@ -19,13 +19,19 @@ ENERGY 3 / RHYTHM 3 / MOTION 2.
 - The illustrated scene uses the existing favicon through CSS compositing. Live
   Discord avatars, decorations and banners remain in the profile screen. No new
   identity, character art, game assets, ranks or statistics were fabricated.
-- A short diagonal wipe accompanies scene changes. The portrait changes position
-  between the main menu and content screens. There is no ambient animation;
-  reduced-motion CSS removes scene movement and the wipe.
+- Motion for React owns all timed animation: diagonal screen wipes, screen/detail
+  entrances, portrait and background movement, menu selection and link gestures.
+  CSS contains no keyframes or transition declarations. Responsive CSS variables
+  supply scene targets; `MotionConfig` and `useReducedMotion` respect the device's
+  reduced-motion setting. There is no ambient animation.
+- Russian subtitles beside headings, the side captions, breadcrumb and pale left
+  polygon are removed. Background nicknames stay on one line. The profile no
+  longer displays a connection/source notice. Menu guide copy follows the user's
+  requested replacements, and GitHub's artwork label reads COMMIT. PUSH. REPEAT.
 
 ## Behavior
 
-- Main menu: PROFILE, SOCIAL LINK, QUEST, STATUS and GITHUB open separate screens.
+- Main menu: PROFILE, SOCIAL LINK, PROJECTS, STATUS and GITHUB open separate screens.
 - Up/Down selects a menu item with wrapping. Home/End selects the first/last item.
   Enter opens the focused item. Pointer movement previews a menu choice; click
   opens it. Escape or either back control returns to the menu and restores focus.
@@ -34,7 +40,8 @@ ENERGY 3 / RHYTHM 3 / MOTION 2.
 - Social-list arrows follow actual keyboard focus, separately from pointer
   previews. Keyboard scrolling cannot let a stationary pointer steal selection.
   The right-hand detail action opens the selected service.
-- Quest selection changes the detail panel. The Nexus Shiyu quest opens the project.
+- PROJECTS contains Nexus Shiyu and three native disabled slots marked with crosses.
+  Keyboard navigation skips disabled slots. Nexus Shiyu opens the project site.
 - Discord presence, Spotify progress, contribution counts and GitHub events retain
   the existing data hooks. Loading, empty and failure branches remain explicit.
 - Content lists scroll inside the screen. Short landscape screens use compact
@@ -53,7 +60,8 @@ ENERGY 3 / RHYTHM 3 / MOTION 2.
   list/detail screens, contextual guide and full-screen transitions.
 - PASS, Craftsmanship: mouse and keyboard selection, Enter, Escape, wrapping,
   Home/End, all tabs, previous/next controls, shortcuts, direct URL reload, browser
-  history and all four quest selections were exercised in the local browser.
+  history and the project list were exercised in the local browser. The three
+  disabled slots cannot receive focus; Tab moves from Nexus to its project link.
   Focus indicators, native controls, accessible names, image dimensions and
   reduced-motion styles are present. No app console errors/warnings were observed.
 - PASS, Contrast: muted text on the navy surface is 10.74:1; cyan on deep blue is
@@ -65,13 +73,13 @@ ENERGY 3 / RHYTHM 3 / MOTION 2.
 All seven web social rows opened their configured GitHub, Discord, Telegram,
 Steam, Nexus Shiyu, Spotify and YouTube addresses. Selecting Discord with the
 keyboard made both the detail panel and its action open the Discord profile.
-The featured quest opened `https://nexus-shiyu.com`.
+The featured project links to `https://nexus-shiyu.com`.
 
 The existing source, GitHub-event and Spotify-track links retain their previously
 verified targets. Email remains `mailto:mail@cookiexzero.ru`; browser security
 blocks launching the external mail client, so this target is source-verified.
 No email was composed or sent. External-site availability is not guaranteed by
-these local navigation checks. API failure/empty states and reduced-motion CSS
-were inspected in source; live and loading states were also observed at runtime.
+these local navigation checks. API failure/empty states and Motion reduced-motion
+handling were inspected in source; live and loading states were also observed.
 
 Lighthouse and field Web Vitals were not measured.

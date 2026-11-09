@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { DISCORD_ID, doing, site } from "../config";
+import { motion, MotionConfig, useReducedMotion } from "motion/react";
+import { DISCORD_ID, projects, site } from "../config";
 import {
   ACTIVITY_CUSTOM_STATUS,
   avatarUrl,
@@ -18,37 +19,38 @@ import { BrandIcon } from "./Icon";
 import { Links } from "./Links";
 import { NexusShiyuLogo } from "./NexusShiyuLogo";
 import { Presence } from "./Presence";
+import { MenuScene } from "./MenuScene";
 
 const SECTIONS = [
   {
     id: "profile",
     title: "PROFILE",
     label: "Профиль",
-    description: "Немного обо мне. По ту сторону никнейма.",
+    description: "Мой профиль из Discord",
   },
   {
     id: "social",
     title: "SOCIAL LINK",
     label: "Контакты",
-    description: "Выбери, где продолжим общение.",
+    description: "Ссылки на мои соц. сети",
   },
   {
-    id: "quest",
-    title: "QUEST",
-    label: "Занятия",
-    description: "Мои проекты, интересы и побочные квесты.",
+    id: "projects",
+    title: "PROJECTS",
+    label: "Проекты",
+    description: "Мои проекты",
   },
   {
     id: "status",
     title: "STATUS",
     label: "Сейчас",
-    description: "Музыка, игры и всё, что происходит сейчас.",
+    description: "Активности из Discord",
   },
   {
     id: "github",
     title: "GITHUB",
     label: "Код",
-    description: "Контрибуции и последние публичные события.",
+    description: "Контрибуции и последние изменения",
   },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -56,11 +58,25 @@ type Screen = "menu" | SectionId;
 
 function screenFromHash(): Screen {
   const value = window.location.hash.slice(1);
+  if (value === "quest") return "projects";
   return SECTIONS.find((item) => item.id === value)?.id ?? "menu";
 }
 
 export default function PersonalPage() {
-  const { profile, loading, error } = useDiscordProfile(DISCORD_ID);
+  const reduced = useReducedMotion();
+  return (
+    <MotionConfig
+      reducedMotion="user"
+      transition={{ duration: reduced ? 0 : 0.18, ease: "easeOut" }}
+    >
+      <PersonalMenu />
+    </MotionConfig>
+  );
+}
+
+function PersonalMenu() {
+  const reduced = useReducedMotion();
+  const { profile } = useDiscordProfile(DISCORD_ID);
   const {
     presence,
     monitored,
@@ -175,52 +191,15 @@ export default function PersonalPage() {
     <div
       className={`game-shell ${screen === "menu" ? "is-menu" : "is-screen"} screen-${screen}`}
     >
-      <div className="scene" aria-hidden="true">
-        <div className="ocean-light" />
-        <svg
-          className="water-surface"
-          viewBox="0 0 1200 300"
-          preserveAspectRatio="none"
-        >
-          <filter id="water">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency=".009 .05"
-              numOctaves="2"
-              seed="7"
-            />
-            <feColorMatrix type="luminanceToAlpha" />
-            <feComponentTransfer>
-              <feFuncA type="discrete" tableValues="0 0 .25 .7 .9" />
-            </feComponentTransfer>
-          </filter>
-          <rect
-            width="1200"
-            height="300"
-            fill="currentColor"
-            filter="url(#water)"
-          />
-        </svg>
-        <div className="scene-plane" />
-        <div className="scene-lettering">
-          COOKIE
-          <br />
-          XZERO
-        </div>
-        <div className="scene-portrait">
-          <img
-            src="/favicon-512.png"
-            alt=""
-            width="512"
-            height="512"
-            fetchPriority="high"
-          />
-        </div>
-        <div className="scene-shard shard-one" />
-        <div className="scene-shard shard-two" />
-        <div className="scene-shard shard-three" />
-        <div className="scene-caption">PERSONAL / SPACE</div>
-      </div>
+      <MenuScene
+        mode={
+          screen === "menu"
+            ? "menu"
+            : screen === "social" || screen === "projects"
+              ? "detail"
+              : "screen"
+        }
+      />
 
       <header className="game-header">
         {screen === "menu" ? (
@@ -246,11 +225,6 @@ export default function PersonalPage() {
             <span aria-hidden="true">◀</span> МЕНЮ
           </button>
         )}
-        <span className="header-label">
-          {screen === "menu"
-            ? "cookiexze.ro / main menu"
-            : `main menu / ${active.title.toLowerCase()}`}
-        </span>
         <LocalClock />
       </header>
 
@@ -258,18 +232,22 @@ export default function PersonalPage() {
         {screen === "menu" ? (
           <section className="main-menu" aria-label="Главное меню">
             <h1 className="sr-only">{site.fallbackName}: главное меню</h1>
-            <div className="menu-side-label" aria-hidden="true">
-              MAIN MENU
-            </div>
             <nav aria-label="Разделы сайта" className="menu-options">
               {SECTIONS.map((item, index) => (
-                <button
+                <motion.button
                   key={item.id}
                   data-menu-item
                   ref={(node) => {
                     menuRefs.current[index] = node;
                   }}
                   className={`menu-option ${index === selected ? "is-selected" : ""}`}
+                  initial={false}
+                  style={{ skewX: -7 }}
+                  animate={{
+                    x: index === selected ? -5 : 0,
+                    scale: index === selected ? 1.08 : 1,
+                  }}
+                  whileTap={{ scale: index === selected ? 1.05 : 0.98 }}
                   onPointerMove={() => {
                     if (selected !== index) setSelected(index);
                   }}
@@ -282,16 +260,24 @@ export default function PersonalPage() {
                   <span className="menu-option-index" aria-hidden="true">
                     0{index + 1}
                   </span>
-                </button>
+                </motion.button>
               ))}
             </nav>
             <div className="menu-signature" aria-hidden="true">
-              <span>cookie</span>
-              <span>xzero.</span>
+              {site.fallbackName}.
             </div>
           </section>
         ) : (
-          <div className="section-screen" key={screen}>
+          <motion.div
+            className="section-screen"
+            key={screen}
+            initial={{ opacity: 0, x: reduced ? 0 : 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              duration: reduced ? 0 : 0.45,
+              delay: reduced ? 0 : 0.13,
+            }}
+          >
             <nav className="screen-tabs" aria-label="Переключить раздел">
               {SECTIONS.map((item) => (
                 <button
@@ -307,7 +293,6 @@ export default function PersonalPage() {
               <h1 className="screen-title" tabIndex={-1} ref={titleRef}>
                 {active.title}
               </h1>
-              <span className="screen-subtitle">{active.label}</span>
             </div>
 
             {screen === "profile" && (
@@ -366,13 +351,6 @@ export default function PersonalPage() {
                       {customStatus.state}
                     </p>
                   )}
-                  <p className="connection-note" role="status">
-                    {loading
-                      ? "Подключаю профиль Discord…"
-                      : error
-                        ? "Discord временно недоступен. Показаны доступные данные."
-                        : "Профиль обновляется из Discord."}
-                  </p>
                 </section>
                 <aside className="profile-card" aria-label="Аватар Discord">
                   {banner && (
@@ -409,7 +387,7 @@ export default function PersonalPage() {
             )}
 
             {screen === "social" && <Links />}
-            {screen === "quest" && <Quests />}
+            {screen === "projects" && <Projects />}
             {screen === "status" && (
               <div className="screen-body status-view">
                 <section
@@ -465,11 +443,13 @@ export default function PersonalPage() {
                 <div className="screen-art-label" aria-hidden="true">
                   COMMIT.
                   <br />
+                  <span>PUSH.</span>
+                  <br />
                   <span>REPEAT.</span>
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </main>
 
@@ -523,7 +503,21 @@ export default function PersonalPage() {
           </div>
         </div>
       </footer>
-      <div className="scene-wipe" key={`wipe-${screen}`} aria-hidden="true" />
+      {!reduced && (
+        <motion.div
+          className="scene-wipe"
+          key={`wipe-${screen}`}
+          aria-hidden="true"
+          style={{ skewX: -18 }}
+          initial={{ x: "-130%" }}
+          animate={{ x: ["-130%", "-5%", "130%"] }}
+          transition={{
+            duration: 0.48,
+            times: [0, 0.45, 1],
+            ease: [0.75, 0, 0.25, 1],
+          }}
+        />
+      )}
       <span className="sr-only" role="status" aria-live="polite">
         {screen === "menu"
           ? `Главное меню. ${active.label}`
@@ -593,77 +587,96 @@ function LocalClock() {
   );
 }
 
-function Quests() {
+function Projects() {
+  const reduced = useReducedMotion();
   const [selected, setSelected] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const item = doing[selected]!;
+  const available = projects.flatMap((project, index) =>
+    project ? [index] : [],
+  );
+  const item = projects[selected]!;
   return (
-    <div className="screen-body quest-view">
+    <div className="screen-body projects-view">
       <nav
-        className="screen-scroll quest-options"
-        aria-label="Мои занятия"
+        className="screen-scroll project-options"
+        aria-label="Мои проекты"
         onKeyDown={(event) => {
           if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
           event.preventDefault();
           const focused = refs.current.findIndex(
             (node) => node === document.activeElement,
           );
+          const current = available.indexOf(focused >= 0 ? focused : selected);
           const next =
-            ((focused >= 0 ? focused : selected) +
-              (event.key === "ArrowDown" ? 1 : -1) +
-              doing.length) %
-            doing.length;
+            available[
+              (current +
+                (event.key === "ArrowDown" ? 1 : -1) +
+                available.length) %
+                available.length
+            ]!;
           setSelected(next);
           refs.current[next]?.focus();
         }}
       >
         <span className="list-caption">
-          QUEST LIST / {String(doing.length).padStart(2, "0")}
+          PROJECT LIST / {String(available.length).padStart(2, "0")}
         </span>
-        {doing.map((quest, index) => (
-          <button
-            key={quest.title}
+        {projects.map((project, index) => (
+          <motion.button
+            key={index}
             ref={(node) => {
               refs.current[index] = node;
             }}
-            className={`quest-option list-option ${selected === index ? "is-selected" : ""}`}
-            aria-pressed={selected === index}
-            onFocus={() => setSelected(index)}
-            onClick={() => setSelected(index)}
+            className={`project-option list-option ${selected === index ? "is-selected" : ""}`}
+            disabled={!project}
+            aria-label={
+              project ? project.title : `Проект ${index + 1} недоступен`
+            }
+            aria-pressed={project ? selected === index : undefined}
+            onFocus={project ? () => setSelected(index) : undefined}
+            onClick={project ? () => setSelected(index) : undefined}
+            initial={false}
+            animate={{ x: project && selected === index ? 7 : 0 }}
+            whileTap={project ? { scale: 0.98 } : undefined}
           >
             <span className="list-index">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span>{quest.title}</span>
-          </button>
+            {project ? (
+              <span>{project.title}</span>
+            ) : (
+              <span className="project-unavailable" aria-hidden="true">
+                ×
+              </span>
+            )}
+          </motion.button>
         ))}
       </nav>
-      <section
-        className="quest-detail"
+      <motion.section
+        className="project-detail"
         key={selected}
-        aria-labelledby="quest-detail-title"
+        aria-labelledby="project-detail-title"
+        initial={{ opacity: 0, x: reduced ? 0 : 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: reduced ? 0 : 0.25 }}
       >
-        <span className="detail-overline">SIDE QUEST / 0{selected + 1}</span>
-        <div className="quest-symbol" aria-hidden="true">
-          {item.logo === "nexus-shiyu" ? (
-            <NexusShiyuLogo className="quest-logo" />
-          ) : (
-            item.emoji
-          )}
+        <span className="detail-overline">PROJECT / 0{selected + 1}</span>
+        <div className="project-symbol" aria-hidden="true">
+          <NexusShiyuLogo className="project-logo" />
         </div>
-        <h2 id="quest-detail-title">{item.title}</h2>
+        <h2 id="project-detail-title">{item.title}</h2>
         <p>{item.description}</p>
         {item.logo === "nexus-shiyu" && (
           <a
             className="confirm-link"
-            href="https://nexus-shiyu.com"
+            href={item.href}
             target="_blank"
             rel="noreferrer noopener"
           >
             Открыть Nexus Shiyu <span aria-hidden="true">↗</span>
           </a>
         )}
-      </section>
+      </motion.section>
     </div>
   );
 }

@@ -25,36 +25,24 @@ export const site = {
   repo: 'https://github.com/CookiexZero/cookiexze.ro',
 };
 
-/** Static "what I'm up to" list — the part Discord and GitHub can't know. */
-export type DoingItem = {
+export type Project = {
   title: string;
   description: string;
-  /** Either an emoji or a named logo component; `logo` wins when both are set. */
-  emoji?: string;
-  logo?: 'nexus-shiyu';
+  href: string;
+  logo: 'nexus-shiyu';
 };
 
-export const doing: DoingItem[] = [
+/** Empty slots remain visible as disabled entries in the project menu. */
+export const projects: (Project | null)[] = [
   {
     logo: 'nexus-shiyu',
-    title: 'Разрабатываю Nexus Shiyu',
+    title: 'Nexus Shiyu',
     description: 'Участник команды и любимого комьюнити.',
+    href: 'https://nexus-shiyu.com',
   },
-  {
-    emoji: '📚',
-    title: 'Изучаю TypeScript',
-    description: 'Делаю пэт-проекты и все такое.',
-  },
-  {
-    emoji: '🎧',
-    title: 'Люблю музыку',
-    description: 'Слушаю электронщину, EDM, hyperpop и J-pop.',
-  },
-  {
-    emoji: '🎰',
-    title: 'Zenless Zone Zero',
-    description: 'Любимая игра и лучшее казино.',
-  },
+  null,
+  null,
+  null,
 ];
 
 export type LinkItem = {

@@ -81,7 +81,7 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.4;
 }
-button:active,
+button:active:not(:disabled),
 a:active {
   translate: 1px 2px;
 }
@@ -115,48 +115,40 @@ a:active {
   transform: perspective(400px) rotateX(-15deg) scaleX(1.2);
   mask-image: linear-gradient(#000, #000 45%, transparent);
 }
-.scene-plane {
-  position: absolute;
-  top: -20%;
-  bottom: -20%;
-  left: -17%;
-  width: 37%;
-  background: #d4faff;
-  transform: rotate(17deg);
-  clip-path: polygon(0 0, 100% 0, 76% 39%, 95% 47%, 68% 100%, 0 100%);
-  opacity: 0.92;
-  transition:
-    transform 0.6s,
-    left 0.6s,
-    opacity 0.6s;
-}
 .scene-lettering {
+  --lettering-menu-left: -13%;
+  --lettering-menu-size: 29vw;
   position: absolute;
   top: 29%;
-  left: -13%;
+  left: var(--lettering-menu-left);
   font-family: var(--font-display);
-  font-size: 29vw;
+  font-size: var(--lettering-menu-size);
   letter-spacing: -0.1em;
   line-height: 0.72;
   color: #02112c;
-  transform: rotate(-76deg);
   white-space: nowrap;
   opacity: 0.9;
 }
 .scene-portrait {
+  --portrait-menu-left: -10%;
+  --portrait-menu-width: 65vw;
+  --portrait-menu-height: 105%;
+  --portrait-menu-bottom: -12%;
+  --portrait-menu-rotate: 12deg;
+  --portrait-menu-opacity: 1;
+  --portrait-screen-left: 53%;
+  --portrait-screen-width: 60vw;
+  --portrait-screen-height: 105%;
+  --portrait-screen-bottom: -19%;
+  --portrait-screen-rotate: -12deg;
+  --portrait-screen-opacity: 0.35;
+  --portrait-detail-opacity: 0.12;
   position: absolute;
-  width: 65vw;
-  height: 105%;
-  left: -10%;
-  bottom: -12%;
+  width: var(--portrait-menu-width);
+  height: var(--portrait-menu-height);
+  left: var(--portrait-menu-left);
+  bottom: var(--portrait-menu-bottom);
   mix-blend-mode: screen;
-  transform: rotate(12deg);
-  transition:
-    left 0.6s,
-    bottom 0.6s,
-    width 0.6s,
-    opacity 0.6s,
-    transform 0.6s;
 }
 .scene-portrait img {
   height: 100%;
@@ -171,15 +163,6 @@ a:active {
     #000 78%,
     transparent 100%
   );
-}
-.scene-caption {
-  position: absolute;
-  right: 28px;
-  top: 36%;
-  writing-mode: vertical-rl;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: var(--muted);
 }
 .scene-shard {
   position: absolute;
@@ -208,29 +191,6 @@ a:active {
   left: 11%;
   background: var(--cyan);
   transform: rotate(-30deg);
-}
-.is-screen .scene-plane {
-  left: 74%;
-  transform: rotate(25deg);
-  opacity: 0.1;
-}
-.is-screen .scene-lettering {
-  left: 50%;
-  color: #61d7ef;
-  opacity: 0.08;
-  font-size: 20vw;
-  transform: rotate(-65deg);
-}
-.is-screen .scene-portrait {
-  left: 53%;
-  width: 60vw;
-  bottom: -19%;
-  transform: rotate(-12deg);
-  opacity: 0.35;
-}
-.screen-social .scene-portrait,
-.screen-quest .scene-portrait {
-  opacity: 0.12;
 }
 .game-header {
   position: absolute;
@@ -292,13 +252,6 @@ a:active {
 }
 .status-dnd .status-dot {
   background: #ff748d;
-}
-.header-label {
-  margin-right: auto;
-  color: var(--muted);
-  font-size: 10px;
-  background: #030b1de8;
-  padding: 7px 10px;
 }
 .local-clock {
   position: relative;
@@ -384,10 +337,6 @@ a:active {
   padding: 1px 20px 5px 10px;
   text-align: left;
   white-space: nowrap;
-  transform: skewX(-7deg);
-  transition:
-    transform 0.17s,
-    color 0.17s;
 }
 .menu-option:nth-child(1) {
   margin-left: 14px;
@@ -420,7 +369,6 @@ a:active {
   transform: translate(8px, 8px);
 }
 .menu-option.is-selected {
-  transform: skewX(-7deg) translateX(-5px) scale(1.08);
   z-index: 2;
 }
 .menu-option.is-selected::before,
@@ -447,21 +395,11 @@ a:active {
 .menu-option:focus-visible {
   outline-offset: 5px;
 }
-.menu-side-label {
-  position: absolute;
-  left: 41%;
-  top: 37%;
-  writing-mode: vertical-rl;
-  transform: rotate(12deg);
-  font-family: var(--font-display);
-  font-size: 11px;
-  color: var(--muted);
-}
 .menu-signature {
   position: absolute;
   right: 6%;
   bottom: 22%;
-  display: grid;
+  white-space: nowrap;
   text-align: right;
   color: #78ecff1c;
   font-family: var(--font-display);
@@ -470,9 +408,6 @@ a:active {
   letter-spacing: -0.08em;
   transform: rotate(-12deg);
   z-index: -1;
-}
-.menu-signature span:first-child {
-  padding-right: 20px;
 }
 .game-footer {
   position: absolute;
@@ -611,11 +546,6 @@ kbd {
   transform: rotate(-7deg);
   width: fit-content;
 }
-.screen-subtitle {
-  padding-top: 18px;
-  color: var(--cyan);
-  font-size: 12px;
-}
 .screen-body {
   display: grid;
   grid-template-columns: 55% 39%;
@@ -657,6 +587,7 @@ kbd {
   border-top: 3px solid var(--cyan);
 }
 .profile-name {
+  white-space: nowrap;
   font-size: clamp(25px, 3.2vw, 48px);
   font-weight: 700;
   letter-spacing: -1.5px;
@@ -728,12 +659,6 @@ kbd {
 .custom-status img {
   display: inline;
 }
-.connection-note {
-  margin-top: 18px;
-  font-size: 10px;
-  line-height: 1.7;
-  color: var(--muted);
-}
 .profile-card {
   position: relative;
   display: flex;
@@ -798,7 +723,7 @@ kbd {
   margin: 4px 22px 17px;
 }
 .social-options,
-.quest-options {
+.project-options {
   padding: 5px 26px 14px 12px;
 }
 .list-option {
@@ -813,7 +738,6 @@ kbd {
   margin: 0 0 8px 6px;
   color: var(--cyan);
   text-align: left;
-  transition: translate 0.15s;
 }
 .list-option::before {
   content: "";
@@ -826,15 +750,11 @@ kbd {
 }
 .list-option.is-selected {
   color: var(--ink);
-  translate: 7px 0;
 }
 .list-option.is-selected::before {
   background: var(--paper);
   border-right: 5px solid var(--red);
   box-shadow: 4px -3px 0 var(--red);
-}
-.list-option:hover:not(.is-selected) {
-  translate: 4px 0;
 }
 .list-option:focus-visible {
   outline-color: var(--cyan);
@@ -883,14 +803,13 @@ kbd {
   color: var(--red);
 }
 .social-detail,
-.quest-detail {
+.project-detail {
   align-self: center;
   padding: 28px 18px;
   position: relative;
   min-width: 0;
   max-height: 100%;
   overflow: auto;
-  animation: detail-in 0.25s ease-out both;
 }
 .detail-overline {
   display: block;
@@ -950,37 +869,47 @@ kbd {
 .confirm-link:hover {
   background: var(--cyan);
 }
-.quest-option {
+.project-option {
   min-height: 82px;
   font-size: 17px;
   font-weight: 700;
   line-height: 1.5;
 }
-.quest-option > span:nth-child(2) {
+.project-option > span:nth-child(2) {
   overflow-wrap: anywhere;
 }
-.quest-detail {
+.project-option:disabled {
+  opacity: 0.65;
+  color: var(--muted);
+}
+.project-unavailable {
+  margin-inline: auto;
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 400;
+}
+.project-detail {
   padding: 26px;
   background: #04122bcf;
   border-bottom: 4px solid var(--cyan);
 }
-.quest-symbol {
+.project-symbol {
   font-size: 60px;
   margin: 26px 0;
 }
-.quest-logo {
+.project-logo {
   width: 160px;
   height: auto;
   background: var(--paper);
   padding: 14px;
   transform: skewX(-10deg);
 }
-.quest-detail h2 {
+.project-detail h2 {
   font-size: clamp(20px, 2.4vw, 32px);
   font-weight: 700;
   line-height: 1.35;
 }
-.quest-detail > p {
+.project-detail > p {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.8;
@@ -1188,13 +1117,6 @@ a.presence-card:hover {
   min-height: 64px;
   padding: 14px 4px;
   border-bottom: 1px solid var(--line);
-  transition:
-    background 0.18s,
-    padding 0.18s;
-}
-.github-event:hover {
-  padding-inline: 12px;
-  background: #0a1d38;
 }
 .github-event-copy {
   min-width: 0;
@@ -1226,42 +1148,6 @@ a.presence-card:hover {
   z-index: 20;
   pointer-events: none;
   background: var(--cyan);
-  transform: skewX(-18deg);
-  animation: scene-wipe 0.48s cubic-bezier(0.75, 0, 0.25, 1) both;
-}
-.section-screen {
-  animation: screen-in 0.45s 0.13s both;
-}
-@keyframes scene-wipe {
-  0% {
-    translate: -130% 0;
-  }
-  45% {
-    translate: -5% 0;
-  }
-  100% {
-    translate: 130% 0;
-  }
-}
-@keyframes screen-in {
-  from {
-    opacity: 0;
-    translate: 28px 0;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-@keyframes detail-in {
-  from {
-    opacity: 0;
-    translate: 12px 0;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
 }
 
 @media (min-width: 1600px) {
@@ -1282,9 +1168,6 @@ a.presence-card:hover {
   }
   .menu-option {
     font-size: 6.2vw;
-  }
-  .menu-side-label {
-    left: 36%;
   }
   .screen-body {
     grid-template-columns: 58% 38%;
@@ -1319,7 +1202,7 @@ a.presence-card:hover {
   .social-detail h2 {
     font-size: 40px;
   }
-  .quest-option {
+  .project-option {
     font-size: 15px;
   }
   .confirm-link {
@@ -1344,9 +1227,6 @@ a.presence-card:hover {
     right: 20px;
     gap: 16px;
     min-height: 50px;
-  }
-  .header-label {
-    display: none;
   }
   .player-tag {
     padding: 8px 16px 8px 9px;
@@ -1376,30 +1256,25 @@ a.presence-card:hover {
     font-size: 7px;
   }
   .scene-portrait {
-    left: -38%;
-    width: 108vw;
-    height: 95%;
-    bottom: -1%;
-    opacity: 0.6;
-    transform: rotate(18deg);
-  }
-  .scene-plane {
-    left: -45%;
-    width: 65%;
-    opacity: 0.4;
+    --portrait-menu-left: -38%;
+    --portrait-menu-width: 108vw;
+    --portrait-menu-height: 95%;
+    --portrait-menu-bottom: -1%;
+    --portrait-menu-rotate: 18deg;
+    --portrait-menu-opacity: 0.6;
+    --portrait-screen-left: 20%;
+    --portrait-screen-width: 110vw;
+    --portrait-screen-height: 95%;
+    --portrait-screen-opacity: 0.15;
+    --portrait-detail-opacity: 0.15;
   }
   .scene-lettering {
-    font-size: 49vw;
-    left: -35%;
-    top: 29%;
+    --lettering-menu-size: 49vw;
+    --lettering-menu-left: -35%;
   }
   .water-surface {
     height: 38%;
     opacity: 0.2;
-  }
-  .scene-caption {
-    right: 10px;
-    font-size: 8px;
   }
   .menu-options {
     left: 29%;
@@ -1434,11 +1309,6 @@ a.presence-card:hover {
   }
   .menu-option:nth-child(5) {
     margin-left: 20px;
-  }
-  .menu-side-label {
-    left: 20%;
-    top: 37%;
-    font-size: 8px;
   }
   .menu-signature {
     bottom: 26%;
@@ -1500,10 +1370,6 @@ a.presence-card:hover {
   .screen-title {
     font-size: 38px;
   }
-  .screen-subtitle {
-    font-size: 10px;
-    padding-top: 10px;
-  }
   .screen-body {
     grid-template-columns: 1fr;
     gap: 0;
@@ -1516,18 +1382,8 @@ a.presence-card:hover {
   .screen-art-label {
     display: none;
   }
-  .is-screen .scene-portrait {
-    left: 20%;
-    width: 110vw;
-    opacity: 0.15;
-  }
-  .is-screen .scene-plane {
-    left: 55%;
-    width: 65%;
-    opacity: 0.15;
-  }
   .social-options,
-  .quest-options {
+  .project-options {
     padding-left: 8px;
     padding-right: 15px;
   }
@@ -1574,35 +1430,35 @@ a.presence-card:hover {
     padding: 16px;
     gap: 13px;
   }
-  .quest-view {
+  .projects-view {
     grid-template-rows: minmax(140px, 1fr) auto;
     gap: 16px;
   }
-  .quest-option {
+  .project-option {
     font-size: 13px;
     min-height: 62px;
   }
-  .quest-detail {
+  .project-detail {
     padding: 14px 18px;
     max-height: 210px;
     overflow: auto;
     align-self: stretch;
   }
-  .quest-symbol {
+  .project-symbol {
     display: none;
   }
-  .quest-detail .detail-overline {
+  .project-detail .detail-overline {
     font-size: 8px;
     margin-bottom: 8px;
   }
-  .quest-detail h2 {
+  .project-detail h2 {
     font-size: 18px;
   }
-  .quest-detail > p {
+  .project-detail > p {
     font-size: 11px;
     margin-top: 8px;
   }
-  .quest-detail .confirm-link {
+  .project-detail .confirm-link {
     min-height: 44px;
     margin-top: 12px;
     padding: 8px 12px;
@@ -1616,9 +1472,6 @@ a.presence-card:hover {
   .menu-option {
     font-size: 8vw;
     min-height: 55px;
-  }
-  .menu-side-label {
-    left: 14%;
   }
   .game-header,
   .game-footer {
@@ -1682,9 +1535,6 @@ a.presence-card:hover {
   }
 }
 @media (max-height: 500px) and (min-width: 701px) {
-  .header-label {
-    display: none;
-  }
   .menu-options {
     top: 37%;
     width: 53%;
@@ -1694,9 +1544,6 @@ a.presence-card:hover {
     font-size: 32px;
     min-height: 44px;
     padding-block: 0;
-  }
-  .menu-side-label {
-    top: 29%;
   }
   .profile-view,
   .social-view {
@@ -1710,21 +1557,21 @@ a.presence-card:hover {
   .command-guide > p {
     font-size: 12px;
   }
-  .quest-detail {
+  .project-detail {
     align-self: stretch;
     padding: 12px 18px;
   }
-  .quest-symbol {
+  .project-symbol {
     display: none;
   }
-  .quest-detail h2 {
+  .project-detail h2 {
     font-size: 18px;
     margin-top: 10px;
   }
-  .quest-detail > p {
+  .project-detail > p {
     font-size: 12px;
   }
-  .quest-detail .confirm-link {
+  .project-detail .confirm-link {
     margin-top: 12px;
   }
 }
@@ -1752,9 +1599,6 @@ a.presence-card:hover {
   .screen-title {
     font-size: 30px;
   }
-  .screen-subtitle {
-    font-size: 9px;
-  }
   .command-guide > p {
     font-size: 10px;
     padding-bottom: 6px;
@@ -1762,11 +1606,11 @@ a.presence-card:hover {
   .game-footer {
     bottom: 8px;
   }
-  .quest-view {
+  .projects-view {
     grid-template-rows: minmax(70px, 1fr) auto;
     gap: 8px;
   }
-  .quest-detail {
+  .project-detail {
     max-height: 140px;
   }
 }
@@ -1787,10 +1631,6 @@ a.presence-card:hover {
     min-height: 44px;
     flex-shrink: 0;
   }
-  .menu-side-label {
-    left: 22%;
-    top: 36%;
-  }
   .section-screen {
     bottom: 100px;
   }
@@ -1801,35 +1641,19 @@ a.presence-card:hover {
   .screen-title {
     font-size: 25px;
   }
-  .screen-subtitle {
-    display: none;
-  }
   .screen-tabs {
     margin-bottom: 0;
   }
-  .quest-view {
+  .projects-view {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: minmax(0, 1fr);
     gap: 14px;
   }
-  .quest-detail {
+  .project-detail {
     max-height: 100%;
     padding: 10px 14px;
   }
-  .quest-detail h2 {
+  .project-detail h2 {
     font-size: 15px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  .scene-wipe {
-    display: none;
   }
 }
