@@ -36,7 +36,7 @@ export type Project = {
 export const projects: (Project | null)[] = [
   {
     logo: 'nexus-shiyu',
-    title: 'Nexus Shiyu',
+    title: 'Nexus',
     description: 'Участник команды и любимого комьюнити.',
     href: 'https://nexus-shiyu.com',
   },
@@ -88,7 +88,7 @@ export const links: LinkItem[] = [
   },
   {
     icon: 'nexus-shiyu',
-    label: 'Nexus Shiyu',
+    label: 'Nexus',
     handle: 'cookiexzero',
     href: 'https://nexus-shiyu.com/users/profile/cmr97xjsa0000j6vtg228hw25',
   },

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+import { fetchCachedJson, readCachedJson } from "../lib/cached-json";
 
 export type ContributionDay = {
   date: string;
@@ -14,6 +15,21 @@ type State = {
   loading: boolean;
 };
 
+type ContributionResponse = { contributions: ContributionDay[] };
+
+function contributionState(body: ContributionResponse, months: number): State {
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  const from = toISODate(cutoff);
+  const days = body.contributions.filter((day) => day.date >= from);
+  return {
+    days,
+    total: days.reduce((sum, day) => sum + day.count, 0),
+    error: null,
+    loading: false,
+  };
+}
+
 /**
  * Daily contribution counts for the last `months` months.
  *
@@ -23,49 +39,40 @@ type State = {
  * profile is set to show them, which the public events feed never does.
  */
 export function useGitHubContributions(user: string, months = 3): State {
-  const [state, setState] = useState<State>({
-    days: [],
-    total: 0,
-    error: null,
-    loading: true,
+  const url = `https://github-contributions-api.jogruber.de/v4/${user}?y=last`;
+  const [state, setState] = useState<State>(() => {
+    const cached = readCachedJson<ContributionResponse>(url);
+    return cached
+      ? contributionState(cached, months)
+      : { days: [], total: 0, error: null, loading: true };
   });
 
   useEffect(() => {
-    const controller = new AbortController();
+    let cancelled = false;
 
     (async () => {
       try {
-        const res = await fetch(
-          `https://github-contributions-api.jogruber.de/v4/${user}?y=last`,
-          { signal: controller.signal },
-        );
-        if (!res.ok) throw new Error(`Contributions API returned ${res.status}`);
-        const body = (await res.json()) as { contributions: ContributionDay[] };
-
-        const cutoff = new Date();
-        cutoff.setMonth(cutoff.getMonth() - months);
-        const from = toISODate(cutoff);
-
-        const days = body.contributions.filter((day) => day.date >= from);
-        setState({
-          days,
-          total: days.reduce((sum, day) => sum + day.count, 0),
-          error: null,
-          loading: false,
-        });
+        const body = await fetchCachedJson<ContributionResponse>(url);
+        if (!cancelled) setState(contributionState(body, months));
       } catch (error) {
-        if (controller.signal.aborted) return;
-        setState({
-          days: [],
-          total: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
+        if (cancelled) return;
+        setState((previous) => ({
+          days: previous.days,
+          total: previous.total,
+          error: previous.days.length
+            ? null
+            : error instanceof Error
+              ? error.message
+              : "Unknown error",
           loading: false,
-        });
+        }));
       }
     })();
 
-    return () => controller.abort();
-  }, [user, months]);
+    return () => {
+      cancelled = true;
+    };
+  }, [url, months]);
 
   return state;
 }

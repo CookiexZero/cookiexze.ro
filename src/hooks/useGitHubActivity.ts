@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { fetchCachedJson, readCachedJson } from "../lib/cached-json";
 
 export type GitHubEvent = {
   id: string;
@@ -35,57 +36,62 @@ type State = {
  * for a personal page, so no token is involved and this stays a static site.
  */
 export function useGitHubActivity(user: string, limit = 5): State {
-  const [state, setState] = useState<State>({
-    events: [],
-    error: null,
-    loading: true,
+  const url = `https://api.github.com/users/${user}/events/public?per_page=30`;
+  const [state, setState] = useState<State>(() => {
+    const cached = readCachedJson<GitHubEvent[]>(url);
+    return {
+      events: cached?.filter(isInteresting).slice(0, limit) ?? [],
+      error: null,
+      loading: !cached,
+    };
   });
 
   useEffect(() => {
-    const controller = new AbortController();
+    let cancelled = false;
 
     (async () => {
       try {
-        const res = await fetch(
-          `https://api.github.com/users/${user}/events/public?per_page=30`,
-          {
-            signal: controller.signal,
-            headers: { Accept: 'application/vnd.github+json' },
-          },
-        );
-        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
-        const events = (await res.json()) as GitHubEvent[];
+        const events = await fetchCachedJson<GitHubEvent[]>(url, {
+          headers: { Accept: "application/vnd.github+json" },
+        });
+        if (cancelled) return;
         setState({
           events: events.filter(isInteresting).slice(0, limit),
           error: null,
           loading: false,
         });
       } catch (error) {
-        if (controller.signal.aborted) return;
-        setState({
-          events: [],
-          error: error instanceof Error ? error.message : 'Unknown error',
+        if (cancelled) return;
+        setState((previous) => ({
+          events: previous.events,
+          error: previous.events.length
+            ? null
+            : error instanceof Error
+              ? error.message
+              : "Unknown error",
           loading: false,
-        });
+        }));
       }
     })();
 
-    return () => controller.abort();
-  }, [user, limit]);
+    return () => {
+      cancelled = true;
+    };
+  }, [url, limit]);
 
   return state;
 }
 
 /** Event types the feed knows how to describe in words. */
 const INTERESTING = new Set([
-  'PushEvent',
-  'CreateEvent',
-  'WatchEvent',
-  'ForkEvent',
-  'PullRequestEvent',
-  'IssuesEvent',
-  'ReleaseEvent',
-  'PublicEvent',
+  "PushEvent",
+  "CreateEvent",
+  "WatchEvent",
+  "ForkEvent",
+  "PullRequestEvent",
+  "IssuesEvent",
+  "ReleaseEvent",
+  "PublicEvent",
 ]);
 
 const isInteresting = (event: GitHubEvent) => INTERESTING.has(event.type);

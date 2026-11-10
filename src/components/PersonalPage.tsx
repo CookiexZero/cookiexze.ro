@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, MotionConfig, useReducedMotion } from "motion/react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { flushSync } from "react-dom";
+import { animate, motion, MotionConfig, useReducedMotion } from "motion/react";
 import { DISCORD_ID, projects, site } from "../config";
 import {
   ACTIVITY_CUSTOM_STATUS,
@@ -20,6 +27,13 @@ import { Links } from "./Links";
 import { NexusShiyuLogo } from "./NexusShiyuLogo";
 import { Presence } from "./Presence";
 import { MenuScene } from "./MenuScene";
+import {
+  snapshotPage,
+  wipeGeometry,
+  wipeTransform,
+  WIPE_SKEW,
+} from "../lib/page-transition";
+import { startViewWipe } from "../lib/view-wipe";
 
 const SECTIONS = [
   {
@@ -67,7 +81,7 @@ export default function PersonalPage() {
   return (
     <MotionConfig
       reducedMotion="user"
-      transition={{ duration: reduced ? 0 : 0.18, ease: "easeOut" }}
+      transition={{ duration: reduced ? 0 : 0.12, ease: "easeOut" }}
     >
       <PersonalMenu />
     </MotionConfig>
@@ -75,7 +89,7 @@ export default function PersonalPage() {
 }
 
 function PersonalMenu() {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotion() === true;
   const { profile } = useDiscordProfile(DISCORD_ID);
   const {
     presence,
@@ -88,6 +102,19 @@ function PersonalMenu() {
   const menuRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const outgoingRef = useRef<HTMLDivElement>(null);
+  const revealRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const wipeRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<Screen>("menu");
+  const runningRef = useRef(false);
+  const viewRef = useRef<ReturnType<typeof startViewWipe> | null>(null);
+  const [viewRunning, setViewRunning] = useState(false);
+  const [wipe, setWipe] = useState<ReturnType<typeof wipeGeometry> | null>(
+    null,
+  );
   const user = profile?.user;
   const customStatus = presence?.activities.find(
     (item) => item.type === ACTIVITY_CUSTOM_STATUS,
@@ -99,22 +126,117 @@ function PersonalMenu() {
   const decoration = user ? decorationUrl(user) : null;
   const banner = user ? bannerUrl(user, 1024) : null;
 
-  const navigate = (next: Screen) => {
-    setScreen(next);
-    window.location.hash = next;
-  };
+  const navigate = useCallback(
+    (next: Screen, updateHistory = true) => {
+      if (next === screenRef.current) return;
+      const applyScreen = () => {
+        const index = SECTIONS.findIndex((item) => item.id === next);
+        if (index >= 0) setSelected(index);
+        setScreen(next);
+      };
+      screenRef.current = next;
+      if (updateHistory && window.location.hash !== `#${next}`)
+        window.history.pushState(null, "", `#${next}`);
+      if (
+        !reduced &&
+        typeof document.startViewTransition === "function" &&
+        shellRef.current
+      ) {
+        viewRef.current?.cancel();
+        setViewRunning(true);
+        const geometry = wipeGeometry(
+          shellRef.current.clientWidth,
+          shellRef.current.clientHeight,
+        );
+        const view = startViewWipe(() => {
+          if (screenRef.current === next) flushSync(applyScreen);
+        }, geometry);
+        viewRef.current = view;
+        const finish = () => {
+          if (viewRef.current !== view) return;
+          viewRef.current = null;
+          setViewRunning(false);
+        };
+        void view.finished.then(finish, finish);
+        return;
+      }
+      if (
+        !reduced &&
+        !runningRef.current &&
+        shellRef.current &&
+        frameRef.current &&
+        outgoingRef.current
+      ) {
+        const geometry = wipeGeometry(
+          shellRef.current.clientWidth,
+          shellRef.current.clientHeight,
+        );
+        snapshotPage(frameRef.current, outgoingRef.current);
+        runningRef.current = true;
+        setWipe(geometry);
+      }
+      applyScreen();
+    },
+    [reduced],
+  );
+
+  useLayoutEffect(() => {
+    if (!wipe) {
+      outgoingRef.current?.replaceChildren();
+      runningRef.current = false;
+      return;
+    }
+    const finish = () => setWipe(null);
+    // Explicit transform keyframes let Motion use native compositor animations.
+    // All three layers share one timeline, rather than JS updates each frame.
+    const forward = [-wipe.travel, wipe.travel].map((x) => wipeTransform(x));
+    const inverse = [wipe.travel, -wipe.travel].map((x) =>
+      wipeTransform(x, -WIPE_SKEW),
+    );
+    const playback = animate(
+      [
+        [revealRef.current!, { transform: forward }, { at: 0 }],
+        [contentRef.current!, { transform: inverse }, { at: 0 }],
+        [wipeRef.current!, { transform: forward }, { at: 0 }],
+      ],
+      {
+        defaultTransition: { duration: 0.5, ease: [0.45, 0, 0.2, 1] },
+        onComplete: finish,
+      },
+    );
+    window.addEventListener("resize", finish, { once: true });
+    return () => {
+      playback.cancel();
+      window.removeEventListener("resize", finish);
+    };
+  }, [wipe]);
 
   useEffect(() => {
-    const sync = () => {
-      const next = screenFromHash();
-      setScreen(next);
-      const index = SECTIONS.findIndex((item) => item.id === next);
-      if (index >= 0) setSelected(index);
-    };
-    sync();
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
+    if (reduced) {
+      setWipe(null);
+      viewRef.current?.cancel();
+    }
+  }, [reduced]);
+
+  useEffect(() => () => viewRef.current?.cancel(), []);
+
+  useEffect(() => {
+    const next = screenFromHash();
+    screenRef.current = next;
+    setScreen(next);
+    const index = SECTIONS.findIndex((item) => item.id === next);
+    if (index >= 0) setSelected(index);
   }, []);
+
+  useEffect(() => {
+    const sync = () => navigate(screenFromHash(), false);
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     document.title =
@@ -125,9 +247,11 @@ function PersonalMenu() {
       firstRender.current = false;
       return;
     }
-    if (screen === "menu") menuRefs.current[selected]?.focus();
+    if (wipe || viewRunning) return;
+    if (screen === "menu")
+      menuRefs.current[selected]?.focus({ preventScroll: true });
     else titleRef.current?.focus({ preventScroll: true });
-  }, [screen]);
+  }, [screen, wipe, viewRunning]);
 
   const selectMenu = (direction: number) => {
     const focused = menuRefs.current.findIndex(
@@ -141,7 +265,7 @@ function PersonalMenu() {
   };
 
   const changeSection = (direction: number) => {
-    const current = SECTIONS.findIndex((item) => item.id === screen);
+    const current = SECTIONS.findIndex((item) => item.id === screenRef.current);
     navigate(
       SECTIONS[(current + direction + SECTIONS.length) % SECTIONS.length]!.id,
     );
@@ -154,12 +278,12 @@ function PersonalMenu() {
       const target = event.target as HTMLElement;
       if (target.closest('input, textarea, select, [contenteditable="true"]'))
         return;
-      if (event.key === "Escape" && screen !== "menu") {
+      if (event.key === "Escape" && screenRef.current !== "menu") {
         event.preventDefault();
         navigate("menu");
         return;
       }
-      if (screen !== "menu") {
+      if (screenRef.current !== "menu") {
         if (event.key === "[" || event.key === "]") {
           event.preventDefault();
           changeSection(event.key === "[" ? -1 : 1);
@@ -185,11 +309,12 @@ function PersonalMenu() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [screen, selected]);
+  }, [screen, selected, navigate]);
 
-  return (
+  const page = (
     <div
-      className={`game-shell ${screen === "menu" ? "is-menu" : "is-screen"} screen-${screen}`}
+      ref={frameRef}
+      className={`page-frame ${screen === "menu" ? "is-menu" : "is-screen"} screen-${screen}`}
     >
       <MenuScene
         mode={
@@ -230,7 +355,16 @@ function PersonalMenu() {
 
       <main className="game-main" id="main">
         {screen === "menu" ? (
-          <section className="main-menu" aria-label="Главное меню">
+          <motion.section
+            className="main-menu"
+            aria-label="Главное меню"
+            initial={false}
+            animate={{ x: 0 }}
+            transition={{
+              duration: reduced ? 0 : 0.28,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
             <h1 className="sr-only">{site.fallbackName}: главное меню</h1>
             <nav aria-label="Разделы сайта" className="menu-options">
               {SECTIONS.map((item, index) => (
@@ -245,9 +379,9 @@ function PersonalMenu() {
                   style={{ skewX: -7 }}
                   animate={{
                     x: index === selected ? -5 : 0,
-                    scale: index === selected ? 1.08 : 1,
+                    scale: index === selected ? 1.04 : 1,
                   }}
-                  whileTap={{ scale: index === selected ? 1.05 : 0.98 }}
+                  whileTap={{ scale: index === selected ? 1.02 : 0.99 }}
                   onPointerMove={() => {
                     if (selected !== index) setSelected(index);
                   }}
@@ -266,16 +400,16 @@ function PersonalMenu() {
             <div className="menu-signature" aria-hidden="true">
               {site.fallbackName}.
             </div>
-          </section>
+          </motion.section>
         ) : (
           <motion.div
             className="section-screen"
             key={screen}
-            initial={{ opacity: 0, x: reduced ? 0 : 28 }}
+            initial={false}
             animate={{ opacity: 1, x: 0 }}
             transition={{
-              duration: reduced ? 0 : 0.45,
-              delay: reduced ? 0 : 0.13,
+              duration: reduced ? 0 : 0.28,
+              ease: [0.22, 1, 0.36, 1],
             }}
           >
             <nav className="screen-tabs" aria-label="Переключить раздел">
@@ -503,26 +637,57 @@ function PersonalMenu() {
           </div>
         </div>
       </footer>
-      {!reduced && (
-        <motion.div
-          className="scene-wipe"
-          key={`wipe-${screen}`}
-          aria-hidden="true"
-          style={{ skewX: -18 }}
-          initial={{ x: "-130%" }}
-          animate={{ x: ["-130%", "-5%", "130%"] }}
-          transition={{
-            duration: 0.48,
-            times: [0, 0.45, 1],
-            ease: [0.75, 0, 0.25, 1],
-          }}
-        />
-      )}
       <span className="sr-only" role="status" aria-live="polite">
         {screen === "menu"
           ? `Главное меню. ${active.label}`
           : `Открыт раздел: ${active.label}`}
       </span>
+    </div>
+  );
+
+  return (
+    <div
+      className="game-shell"
+      ref={shellRef}
+      data-transitioning={wipe || viewRunning ? "" : undefined}
+    >
+      <div
+        className="outgoing-page"
+        ref={outgoingRef}
+        inert
+        aria-hidden="true"
+      />
+      <div
+        ref={revealRef}
+        className="page-reveal"
+        inert={!!wipe}
+        aria-hidden={wipe ? true : undefined}
+        style={{
+          left: wipe ? -wipe.span : 0,
+          width: wipe ? wipe.span : "100%",
+          transform: wipe ? wipeTransform(-wipe.travel) : "none",
+        }}
+      >
+        <div
+          ref={contentRef}
+          className="page-reveal-content"
+          style={{
+            left: wipe ? wipe.span : 0,
+            width: wipe ? wipe.width : "100%",
+            transform: wipe ? wipeTransform(wipe.travel, -WIPE_SKEW) : "none",
+          }}
+        >
+          {page}
+        </div>
+      </div>
+      {wipe && (
+        <div
+          ref={wipeRef}
+          className="scene-wipe"
+          aria-hidden="true"
+          style={{ transform: wipeTransform(-wipe.travel) }}
+        />
+      )}
     </div>
   );
 }
@@ -588,7 +753,6 @@ function LocalClock() {
 }
 
 function Projects() {
-  const reduced = useReducedMotion();
   const [selected, setSelected] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const available = projects.flatMap((project, index) =>
@@ -652,13 +816,9 @@ function Projects() {
           </motion.button>
         ))}
       </nav>
-      <motion.section
+      <section
         className="project-detail"
-        key={selected}
         aria-labelledby="project-detail-title"
-        initial={{ opacity: 0, x: reduced ? 0 : 12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: reduced ? 0 : 0.25 }}
       >
         <span className="detail-overline">PROJECT / 0{selected + 1}</span>
         <div className="project-symbol" aria-hidden="true">
@@ -673,10 +833,10 @@ function Projects() {
             target="_blank"
             rel="noreferrer noopener"
           >
-            Открыть Nexus Shiyu <span aria-hidden="true">↗</span>
+            Открыть Nexus <span aria-hidden="true">↗</span>
           </a>
         )}
-      </motion.section>
+      </section>
     </div>
   );
 }

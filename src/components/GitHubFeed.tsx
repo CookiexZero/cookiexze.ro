@@ -34,21 +34,9 @@ export function GitHubFeed() {
             rel="noreferrer noopener"
             className="github-event"
             initial={false}
-            animate={{
-              paddingLeft: 4,
-              paddingRight: 4,
-              backgroundColor: "rgba(10, 29, 56, 0)",
-            }}
-            whileHover={{
-              paddingLeft: 12,
-              paddingRight: 12,
-              backgroundColor: "#0a1d38",
-            }}
-            whileFocus={{
-              paddingLeft: 12,
-              paddingRight: 12,
-              backgroundColor: "#0a1d38",
-            }}
+            animate={{ x: 0 }}
+            whileHover={{ x: 4 }}
+            whileFocus={{ x: 4 }}
           >
             <span className="github-event-copy">
               <span className="github-event-title">{describe(event)}</span>

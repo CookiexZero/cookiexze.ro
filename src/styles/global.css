@@ -54,6 +54,24 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan) #051129;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: #051129;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--cyan);
+  border-radius: 2px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--paper);
+}
 ::selection {
   color: var(--ink);
   background: var(--cyan);
@@ -91,8 +109,51 @@ a:active {
   overflow: hidden;
   isolation: isolate;
   background: var(--ink);
+  view-transition-name: page;
+}
+:root {
+  view-transition-name: none;
+}
+::view-transition-group(page),
+::view-transition-old(page),
+::view-transition-new(page) {
+  animation: none;
+}
+::view-transition-image-pair(page) {
+  background: var(--cyan);
+  isolation: isolate;
+}
+::view-transition-old(page),
+::view-transition-new(page) {
+  mix-blend-mode: normal;
+}
+.page-frame,
+.outgoing-page {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.page-frame {
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--ink);
+}
+.outgoing-page {
+  pointer-events: none;
+}
+.page-reveal,
+.page-reveal-content {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  will-change: transform;
+}
+.page-reveal {
+  z-index: 1;
+  overflow: hidden;
 }
 .scene {
+  contain: layout paint;
   position: absolute;
   inset: 0;
   z-index: -2;
@@ -110,23 +171,24 @@ a:active {
   left: 0;
   width: 100%;
   height: 43%;
-  color: #73f7ff;
   opacity: 0.24;
   transform: perspective(400px) rotateX(-15deg) scaleX(1.2);
-  mask-image: linear-gradient(#000, #000 45%, transparent);
 }
 .scene-lettering {
-  --lettering-menu-left: -13%;
-  --lettering-menu-size: 29vw;
   position: absolute;
   top: 29%;
-  left: var(--lettering-menu-left);
+  left: 28%;
   font-family: var(--font-display);
-  font-size: var(--lettering-menu-size);
+  font-size: clamp(100px, 20vw, 320px);
   letter-spacing: -0.1em;
   line-height: 0.72;
-  color: #02112c;
+  color: #61d7ef;
+  transform: rotate(-65deg);
   white-space: nowrap;
+  opacity: 0.08;
+}
+.scene--menu .scene-lettering {
+  color: #02112c;
   opacity: 0.9;
 }
 .scene-portrait {
@@ -148,21 +210,25 @@ a:active {
   height: var(--portrait-menu-height);
   left: var(--portrait-menu-left);
   bottom: var(--portrait-menu-bottom);
-  mix-blend-mode: screen;
+  transform: rotate(var(--portrait-menu-rotate));
+  opacity: var(--portrait-menu-opacity);
+}
+.scene--screen .scene-portrait,
+.scene--detail .scene-portrait {
+  width: var(--portrait-screen-width);
+  height: var(--portrait-screen-height);
+  left: var(--portrait-screen-left);
+  bottom: var(--portrait-screen-bottom);
+  transform: rotate(var(--portrait-screen-rotate));
+  opacity: var(--portrait-screen-opacity);
+}
+.scene--detail .scene-portrait {
+  opacity: var(--portrait-detail-opacity);
 }
 .scene-portrait img {
   height: 100%;
   width: 100%;
-  object-fit: cover;
-  filter: grayscale(1) invert(1) contrast(1.8);
-  opacity: 0.95;
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    #000 8%,
-    #000 78%,
-    transparent 100%
-  );
+  object-fit: contain;
 }
 .scene-shard {
   position: absolute;
@@ -374,6 +440,13 @@ a:active {
 .menu-option.is-selected::before,
 .menu-option.is-selected::after {
   opacity: 1;
+}
+.menu-option-text {
+  display: inline-block;
+  /* Keep italic ink inside the gradient's paint box without changing row size. */
+  padding: 0.08em 0.24em 0.08em 0.08em;
+  margin: -0.08em -0.24em -0.08em -0.08em;
+  overflow: visible;
 }
 .menu-option.is-selected .menu-option-text {
   background: linear-gradient(178deg, #050b20 0 48%, var(--red) 49% 100%);
@@ -774,7 +847,6 @@ kbd {
   align-items: center;
 }
 .symbol-nexus {
-  background: var(--paper);
   padding: 3px;
 }
 .social-label {
@@ -825,14 +897,13 @@ kbd {
   transform: rotate(-12deg);
 }
 .detail-brand-nexus {
-  background: var(--paper);
   width: 180px;
   height: 120px;
   display: grid;
   place-items: center;
   padding: 20px;
 }
-.detail-brand-nexus svg {
+.detail-brand-nexus img {
   width: 100%;
   height: auto;
 }
@@ -900,7 +971,6 @@ kbd {
 .project-logo {
   width: 160px;
   height: auto;
-  background: var(--paper);
   padding: 14px;
   transform: skewX(-10deg);
 }
@@ -1118,6 +1188,10 @@ a.presence-card:hover {
   padding: 14px 4px;
   border-bottom: 1px solid var(--line);
 }
+.github-event:hover,
+.github-event:focus-visible {
+  background: #0a1d38;
+}
 .github-event-copy {
   min-width: 0;
   flex: 1;
@@ -1267,10 +1341,6 @@ a.presence-card:hover {
     --portrait-screen-height: 95%;
     --portrait-screen-opacity: 0.15;
     --portrait-detail-opacity: 0.15;
-  }
-  .scene-lettering {
-    --lettering-menu-size: 49vw;
-    --lettering-menu-left: -35%;
   }
   .water-surface {
     height: 38%;

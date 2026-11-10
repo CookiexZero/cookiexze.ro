@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { memo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { links } from "../config";
 import { BrandIcon } from "./Icon";
 
-export function Links() {
-  const reduced = useReducedMotion();
+export const Links = memo(function Links() {
   const [selected, setSelected] = useState(0);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   const active = links[selected]!;
@@ -70,14 +69,7 @@ export function Links() {
           </motion.a>
         ))}
       </nav>
-      <motion.aside
-        className="social-detail"
-        key={selected}
-        aria-label={`Выбран ${active.label}`}
-        initial={{ opacity: 0, x: reduced ? 0 : 12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: reduced ? 0 : 0.25 }}
-      >
+      <aside className="social-detail" aria-label={`Выбран ${active.label}`}>
         <span className="detail-overline">CONNECTION / 0{selected + 1}</span>
         <div
           className={`detail-brand ${active.icon === "nexus-shiyu" ? "detail-brand-nexus" : ""}`}
@@ -96,7 +88,7 @@ export function Links() {
           {active.icon === "mail" ? "Написать письмо" : "Открыть профиль"}
           <span aria-hidden="true">↗</span>
         </a>
-      </motion.aside>
+      </aside>
     </div>
   );
-}
+});
