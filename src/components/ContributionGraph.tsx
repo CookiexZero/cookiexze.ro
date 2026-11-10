@@ -1,9 +1,9 @@
-import { GITHUB_USER } from '../config';
+import { GITHUB_USER } from "../config";
 import {
   useContributionWeeks,
   useGitHubContributions,
   type ContributionDay,
-} from '../hooks/useGitHubContributions';
+} from "../hooks/useGitHubContributions";
 
 /** Square size and the gap between squares, in px — shared by the grid and the
  *  month labels so the two stay aligned. Sized so half a year of weeks still
@@ -12,30 +12,30 @@ const CELL = 11;
 const GAP = 3;
 const STRIDE = CELL + GAP;
 
-/** Level 0-4 -> background, light-theme ramp. */
+/** Activity intensity follows the page's blue-to-cyan palette. */
 const LEVELS = [
-  'bg-zinc-100',
-  'bg-emerald-200',
-  'bg-emerald-300',
-  'bg-emerald-500',
-  'bg-emerald-700',
+  "contribution-level-0",
+  "contribution-level-1",
+  "contribution-level-2",
+  "contribution-level-3",
+  "contribution-level-4",
 ];
 
-const WEEKDAYS = ['Пн', '', 'Ср', '', 'Пт', '', ''];
+const WEEKDAYS = ["Пн", "", "Ср", "", "Пт", "", ""];
 
 const MONTHS = [
-  'янв',
-  'фев',
-  'мар',
-  'апр',
-  'май',
-  'июн',
-  'июл',
-  'авг',
-  'сен',
-  'окт',
-  'ноя',
-  'дек',
+  "янв",
+  "фев",
+  "мар",
+  "апр",
+  "май",
+  "июн",
+  "июл",
+  "авг",
+  "сен",
+  "окт",
+  "ноя",
+  "дек",
 ];
 
 export function ContributionGraph({ months = 6 }: { months?: number }) {
@@ -46,33 +46,48 @@ export function ContributionGraph({ months = 6 }: { months?: number }) {
   const weeks = useContributionWeeks(days);
 
   if (loading) {
-    return <div className="h-32 animate-pulse rounded-3xl bg-zinc-100" />;
+    return (
+      <div className="data-loading contribution-graph" role="status">
+        Загружаю контрибуции…
+      </div>
+    );
   }
 
-  // The graph is a bonus on top of the feed — stay silent if it can't load.
-  if (error || weeks.length === 0) return null;
+  if (error || weeks.length === 0)
+    return (
+      <p className="data-message contribution-graph">
+        {error
+          ? "График контрибуций временно недоступен."
+          : "За этот период пока нет контрибуций."}
+      </p>
+    );
 
   return (
-    <div className="rounded-3xl border border-zinc-200/80 bg-white p-4">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <p className="text-sm text-zinc-700">
-          <span className="font-medium text-zinc-900">{total}</span>{' '}
-          {plural(total, 'контрибуция', 'контрибуции', 'контрибуций')}
+    <div className="contribution-graph">
+      <div className="contribution-summary">
+        <p>
+          <strong>{total}</strong>{" "}
+          {plural(total, "контрибуция", "контрибуции", "контрибуций")}
         </p>
-        <p className="text-xs text-zinc-400">
-          за {months} {plural(months, 'месяц', 'месяца', 'месяцев')}
+        <p className="contribution-period">
+          за {months} {plural(months, "месяц", "месяца", "месяцев")}
         </p>
       </div>
 
       {/* Half a year of weeks is wider than a phone; it scrolls here rather
           than widening the page. */}
-      <div className="max-w-full overflow-x-auto">
+      <div
+        className="contribution-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label="Прокручиваемый график контрибуций GitHub"
+      >
         <div
           className="flex gap-2"
           role="img"
-          aria-label={`График контрибуций GitHub за последние ${months} ${plural(months, 'месяц', 'месяца', 'месяцев')}: ${total} всего`}
+          aria-label={`График контрибуций GitHub за последние ${months} ${plural(months, "месяц", "месяца", "месяцев")}: ${total} всего`}
         >
-          <div className="flex flex-col text-[10px] leading-none text-zinc-400">
+          <div className="graph-label flex flex-col">
             {/* Spacer matching the month-label row above the grid. */}
             <div style={{ height: 16 }} />
             {WEEKDAYS.map((label, row) => (
@@ -90,7 +105,11 @@ export function ContributionGraph({ months = 6 }: { months?: number }) {
             <MonthLabels weeks={weeks} />
             <div className="flex" style={{ gap: GAP }}>
               {weeks.map((week, column) => (
-                <div key={column} className="flex flex-col" style={{ gap: GAP }}>
+                <div
+                  key={column}
+                  className="flex flex-col"
+                  style={{ gap: GAP }}
+                >
                   {week.map((day, row) => (
                     <Cell key={row} day={day} />
                   ))}
@@ -101,12 +120,12 @@ export function ContributionGraph({ months = 6 }: { months?: number }) {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-zinc-400">
+      <div className="contribution-legend">
         меньше
         {LEVELS.map((background, level) => (
           <span
             key={level}
-            className={`rounded-[3px] ${background}`}
+            className={background}
             style={{ width: CELL - 2, height: CELL - 2 }}
           />
         ))}
@@ -122,9 +141,9 @@ function Cell({ day }: { day: ContributionDay | null }) {
   }
   return (
     <span
-      className={`rounded-[3px] ${LEVELS[day.level] ?? LEVELS[0]}`}
+      className={LEVELS[day.level] ?? LEVELS[0]}
       style={{ width: CELL, height: CELL }}
-      title={`${formatDate(day.date)}: ${day.count} ${plural(day.count, 'контрибуция', 'контрибуции', 'контрибуций')}`}
+      title={`${formatDate(day.date)}: ${day.count} ${plural(day.count, "контрибуция", "контрибуции", "контрибуций")}`}
     />
   );
 }
@@ -149,7 +168,7 @@ function MonthLabels({ weeks }: { weeks: (ContributionDay | null)[][] }) {
       {labels.map(({ column, text }) => (
         <span
           key={text + column}
-          className="absolute top-0 text-[10px] leading-none text-zinc-400"
+          className="graph-label absolute top-0"
           style={{ left: column * STRIDE }}
         >
           {text}
@@ -160,9 +179,9 @@ function MonthLabels({ weeks }: { weeks: (ContributionDay | null)[][] }) {
 }
 
 function formatDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
   });
 }
 

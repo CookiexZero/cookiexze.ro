@@ -1,0 +1,17 @@
+<!-- Rasterized at 1600x400 to public/images/water-surface.webp. Keep the static
+     turbulence and alpha fade out of the animated page's live filter graph. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 1200 300">
+  <defs>
+    <filter id="water">
+      <feTurbulence type="fractalNoise" baseFrequency=".009 .05" numOctaves="2" seed="7" />
+      <feColorMatrix type="luminanceToAlpha" />
+      <feComponentTransfer><feFuncA type="discrete" tableValues="0 0 .25 .7 .9" /></feComponentTransfer>
+    </filter>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="45%" stop-color="white" />
+      <stop offset="100%" stop-color="white" stop-opacity="0" />
+    </linearGradient>
+    <mask id="fade-mask"><rect width="1200" height="300" fill="url(#fade)" /></mask>
+  </defs>
+  <g mask="url(#fade-mask)"><rect width="1200" height="300" fill="#73f7ff" filter="url(#water)" /></g>
+</svg>
